@@ -1,3 +1,9 @@
+## 0.2.1
+
+* `autoRequest: true` (on `PermissionSetupPage`, `PermissionSetupBuilder` and `PermissionSetupBloc`): the system
+  permission dialogs open one after another as soon as the page appears, with no tap. Permissions that need Settings
+  are skipped. Off by default.
+
 ## 0.2.0
 
 * **Automatic scanning.** `PermissionSetupPage()` without `items:` reads the permissions the installed app declares

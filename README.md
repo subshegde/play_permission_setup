@@ -128,7 +128,7 @@ or add it to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  play_permission_setup: ^0.2.0
+  play_permission_setup: ^0.2.1
 ```
 
 ### 2. Declare the permissions the normal way
@@ -159,6 +159,7 @@ class Gate extends StatelessWidget {
       onComplete: goHome,                  // required permissions granted + Continue
       onSkip: goHome,                      // shows "Skip"
       autoCompleteWhenSatisfied: true,     // never show the page if nothing is left to ask
+      autoRequest: true,                   // open the system dialogs one after another, no tap needed
     );
   }
 }
@@ -1183,6 +1184,14 @@ For bigger changes, open an issue first so we can agree on the approach.
 
 Please do not report security problems in a public issue. Contact the maintainers privately through the repository's
 security policy.
+
+### Contributors
+
+[![subshegde](https://github.com/subshegde.png?size=64&v=4)](https://github.com/subshegde)
+
+[**subshegde**](https://github.com/subshegde) · Subrahmanya S Hegde
+
+Want to be listed here? Open a pull request, see [Contributing](#contributing) above.
 
 ### License
 

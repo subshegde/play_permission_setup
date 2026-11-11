@@ -8,12 +8,14 @@ PermissionSetupBloc make(
   List<PermissionItem> items, {
   PermissionPlatform platform = PermissionPlatform.android,
   bool autoComplete = false,
+  bool autoRequest = false,
 }) => PermissionSetupBloc(
   items: items,
   service: s,
   platform: platform,
   autoRefreshOnResume: false,
   autoCompleteWhenSatisfied: autoComplete,
+  autoRequest: autoRequest,
 );
 
 Future<PermissionSetupBloc> ready(PermissionSetupBloc b) async {
@@ -224,6 +226,33 @@ void main() {
     await b.stream.firstWhere(
       (x) => x.status == PermissionSetupStatus.completed,
     );
+    await b.close();
+  });
+
+  test(
+    'autoRequest asks for every missing permission one after another',
+    () async {
+      final s = FakeService(
+        initial: {PermissionKind.microphone: PermissionGrant.granted},
+      );
+      s.outcomes[PermissionKind.camera] = [PermissionGrant.granted];
+      s.outcomes[PermissionKind.location] = [PermissionGrant.denied];
+      final b = make(s, [cam, mic, loc], autoRequest: true);
+      await b.stream.firstWhere(
+        (x) =>
+            s.requested.length == 2 && x.status == PermissionSetupStatus.ready,
+      );
+      // Granted one is skipped; the others are asked in list order, no tap.
+      expect(s.requested, [PermissionKind.camera, PermissionKind.location]);
+      await b.close();
+    },
+  );
+
+  test('without autoRequest nothing is asked until the user taps', () async {
+    final s = FakeService();
+    final b = make(s, [cam]);
+    await ready(b);
+    expect(s.requested, isEmpty);
     await b.close();
   });
 

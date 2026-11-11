@@ -23,6 +23,7 @@ class PermissionSetupBloc
     PermissionPlatform? platform,
     this.autoRefreshOnResume = true,
     this.autoCompleteWhenSatisfied = false,
+    this.autoRequest = false,
   }) : _service = service ?? PermissionHandlerService(),
        super(
          PermissionSetupState(
@@ -55,6 +56,10 @@ class PermissionSetupBloc
   final bool autoRefreshOnResume;
 
   /// Skip the page entirely when every required permission is already granted.
+  /// Ask for every missing permission automatically when the page opens: the
+  /// system dialogs appear one after another, no tap needed. Permissions that
+  /// can only be changed in Settings are skipped.
+  final bool autoRequest;
   final bool autoCompleteWhenSatisfied;
   bool _observing = false;
 
@@ -140,6 +145,13 @@ class PermissionSetupBloc
       next = next.copyWith(status: PermissionSetupStatus.completed);
     }
     emit(next);
+    // Open the system dialogs one after another, without waiting for a tap.
+    if (event is PermissionSetupStarted &&
+        autoRequest &&
+        next.status != PermissionSetupStatus.completed &&
+        !isClosed) {
+      add(const PermissionAllRequested());
+    }
   }
 
   Future<void> _onRequested(

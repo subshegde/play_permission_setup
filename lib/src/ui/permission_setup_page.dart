@@ -38,6 +38,7 @@ class PermissionSetupPage extends StatelessWidget {
     this.loadingBuilder,
     this.allowSkip,
     this.autoCompleteWhenSatisfied = false,
+    this.autoRequest = false,
     this.forcedLayout,
     this.appBar,
     this.brand,
@@ -75,6 +76,10 @@ class PermissionSetupPage extends StatelessWidget {
   final PermissionStateBuilder? loadingBuilder;
   final bool? allowSkip;
   final bool autoCompleteWhenSatisfied;
+
+  /// Open the system permission dialogs one after another as soon as the page
+  /// appears, instead of waiting for taps. Ones that need Settings are skipped.
+  final bool autoRequest;
   final PermissionSetupLayout? forcedLayout;
   final PreferredSizeWidget? appBar;
 
@@ -136,6 +141,7 @@ class PermissionSetupPage extends StatelessWidget {
         onComplete: onComplete,
         onSkip: onSkip,
         autoCompleteWhenSatisfied: autoCompleteWhenSatisfied,
+        autoRequest: autoRequest,
         builder: (context, state, actions) => PermissionSetupView(
           state: state,
           actions: actions,

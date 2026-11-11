@@ -30,6 +30,7 @@ class PermissionSetupBuilder extends StatelessWidget {
     this.onComplete,
     this.onSkip,
     this.autoCompleteWhenSatisfied = false,
+    this.autoRequest = false,
     required this.builder,
   });
 
@@ -41,6 +42,9 @@ class PermissionSetupBuilder extends StatelessWidget {
   final void Function(PermissionSetupState state)? onComplete;
   final void Function(PermissionSetupState state)? onSkip;
   final bool autoCompleteWhenSatisfied;
+
+  /// See [PermissionSetupBloc.autoRequest].
+  final bool autoRequest;
   final Widget Function(
     BuildContext context,
     PermissionSetupState state,
@@ -77,12 +81,18 @@ class PermissionSetupBuilder extends StatelessWidget {
       // A different list / service / mode gives a different key: the old bloc
       // is closed and a new one created.
       key: ValueKey(
-        Object.hash(Object.hashAll(items), service, autoCompleteWhenSatisfied),
+        Object.hash(
+          Object.hashAll(items),
+          service,
+          autoCompleteWhenSatisfied,
+          autoRequest,
+        ),
       ),
       create: (_) => PermissionSetupBloc(
         items: items,
         service: service,
         autoCompleteWhenSatisfied: autoCompleteWhenSatisfied,
+        autoRequest: autoRequest,
       ),
       child: child,
     );
