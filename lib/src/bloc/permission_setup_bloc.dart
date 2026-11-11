@@ -24,6 +24,7 @@ class PermissionSetupBloc
     this.autoRefreshOnResume = true,
     this.autoCompleteWhenSatisfied = false,
     this.autoRequest = false,
+    this.beforeAsk,
   }) : _service = service ?? PermissionHandlerService(),
        super(
          PermissionSetupState(
@@ -60,6 +61,12 @@ class PermissionSetupBloc
   /// system dialogs appear one after another, no tap needed. Permissions that
   /// can only be changed in Settings are skipped.
   final bool autoRequest;
+
+  /// Called right before each system dialog. Show your "why we need this"
+  /// message and return `true` to go on and ask, or `false` to skip this
+  /// permission for now (nothing is requested and it is not counted as a
+  /// refusal). The page's `explainBeforeAsk: true` supplies a ready-made one.
+  final Future<bool> Function(PermissionItem item)? beforeAsk;
   final bool autoCompleteWhenSatisfied;
   bool _observing = false;
 
@@ -197,6 +204,24 @@ class PermissionSetupBloc
       (e) => e.copyWith(isRequesting: true, clearError: true),
       status: PermissionSetupStatus.requesting,
     );
+    final explain = beforeAsk;
+    if (explain != null) {
+      var go = false;
+      try {
+        go = await explain(before.item);
+      } catch (_) {
+        go = false;
+      }
+      if (!go || isClosed) {
+        _replace(
+          emit,
+          kind,
+          (e) => e.copyWith(isRequesting: false),
+          status: PermissionSetupStatus.ready,
+        );
+        return;
+      }
+    }
     try {
       final r = await _service.request(kind);
       _replace(

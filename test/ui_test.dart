@@ -324,4 +324,185 @@ void main() {
     expect(t.takeException(), isNull);
     await closeBloc(t, b);
   });
+
+  group('explainBeforeAsk', () {
+    Future<void> open(WidgetTester t, FakeService svc, bool explain) async {
+      t.view.physicalSize = const Size(390, 844);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(
+        MaterialApp(
+          home: PermissionSetupPage(
+            items: const [
+              PermissionItem(
+                kind: PermissionKind.camera,
+                description: 'Scan your receipts.',
+              ),
+            ],
+            service: svc,
+            explainBeforeAsk: explain,
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+    }
+
+    testWidgets('shows the reason first; Continue then asks', (t) async {
+      final s = FakeService();
+      await open(t, s, true);
+      await t.tap(find.widgetWithText(FilledButton, 'Allow').first);
+      // The row's spinner keeps animating while the dialog is open.
+      await t.pump(const Duration(milliseconds: 400));
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Scan your receipts.'), findsWidgets);
+      expect(s.requested, isEmpty);
+      await t.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Continue'),
+        ),
+      );
+      await t.pumpAndSettle();
+      expect(s.requested, [PermissionKind.camera]);
+    });
+
+    testWidgets('Not now asks nothing', (t) async {
+      final s = FakeService();
+      await open(t, s, true);
+      await t.tap(find.widgetWithText(FilledButton, 'Allow').first);
+      await t.pump(const Duration(milliseconds: 400));
+      await t.tap(find.widgetWithText(TextButton, 'Not now'));
+      await t.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(s.requested, isEmpty);
+    });
+
+    testWidgets('off by default: no explanation dialog', (t) async {
+      final s = FakeService();
+      await open(t, s, false);
+      await t.tap(find.widgetWithText(FilledButton, 'Allow').first);
+      await t.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(s.requested, [PermissionKind.camera]);
+    });
+  });
+
+  group('wizard', () {
+    const wItems = [
+      PermissionItem(kind: PermissionKind.camera),
+      PermissionItem(kind: PermissionKind.microphone, isRequired: false),
+    ];
+
+    Future<List<String>> open(
+      WidgetTester t,
+      FakeService svc, {
+      bool wizard = true,
+      bool skipAll = false,
+    }) async {
+      final events = <String>[];
+      t.view.physicalSize = const Size(390, 844);
+      t.view.devicePixelRatio = 1;
+      addTearDown(t.view.reset);
+      await t.pumpWidget(
+        MaterialApp(
+          home: PermissionSetupPage(
+            items: wItems,
+            service: svc,
+            wizard: wizard,
+            onComplete: (_) => events.add('complete'),
+            onSkip: skipAll ? (_) => events.add('skip') : null,
+          ),
+        ),
+      );
+      await t.pumpAndSettle();
+      return events;
+    }
+
+    testWidgets('shows one permission per screen with the step count', (
+      t,
+    ) async {
+      await open(t, FakeService());
+      expect(find.text('Step 1 of 2'), findsOneWidget);
+      expect(find.text('Camera'), findsOneWidget);
+      expect(find.text('Microphone'), findsNothing);
+    });
+
+    testWidgets('Allow asks, and a grant moves on by itself', (t) async {
+      final s = FakeService();
+      s.outcomes[PermissionKind.camera] = [PermissionGrant.granted];
+      await open(t, s);
+      await t.tap(find.widgetWithText(FilledButton, 'Allow'));
+      await t.pumpAndSettle();
+      expect(s.requested, [PermissionKind.camera]);
+      expect(find.text('Step 2 of 2'), findsOneWidget);
+      expect(find.text('Microphone'), findsOneWidget);
+    });
+
+    testWidgets('Skip goes on, Back returns', (t) async {
+      final s = FakeService();
+      await open(t, s);
+      await t.tap(find.widgetWithText(TextButton, 'Skip'));
+      await t.pumpAndSettle();
+      expect(find.text('Step 2 of 2'), findsOneWidget);
+      expect(s.requested, isEmpty);
+      await t.tap(find.widgetWithText(TextButton, 'Back'));
+      await t.pumpAndSettle();
+      expect(find.text('Step 1 of 2'), findsOneWidget);
+    });
+
+    testWidgets('last step: missing required blocks Continue, Review jumps', (
+      t,
+    ) async {
+      await open(t, FakeService());
+      await t.tap(find.widgetWithText(TextButton, 'Skip')); // camera skipped
+      await t.pumpAndSettle();
+      expect(
+        find.text('Some required permissions are still missing.'),
+        findsOneWidget,
+      );
+      // Skipping can't finish the flow while a required one is missing.
+      expect(find.widgetWithText(TextButton, 'Skip'), findsNothing);
+      await t.tap(find.widgetWithText(TextButton, 'Review missing'));
+      await t.pumpAndSettle();
+      expect(find.text('Step 1 of 2'), findsOneWidget);
+    });
+
+    testWidgets('finishes with Continue once required are granted', (t) async {
+      final s = FakeService();
+      s.outcomes[PermissionKind.camera] = [PermissionGrant.granted];
+      final events = await open(t, s);
+      await t.tap(find.widgetWithText(FilledButton, 'Allow'));
+      await t.pumpAndSettle();
+      await t.tap(find.widgetWithText(TextButton, 'Skip')); // optional mic
+      await t.pumpAndSettle();
+      await t.tap(find.widgetWithText(TextButton, 'Skip'));
+      await t.pumpAndSettle();
+      expect(events, ['complete']);
+    });
+
+    testWidgets('Skip setup ends the whole flow', (t) async {
+      final events = await open(t, FakeService(), skipAll: true);
+      await t.tap(find.text('Skip setup'));
+      await t.pumpAndSettle();
+      expect(events, ['skip']);
+    });
+
+    testWidgets('permanently denied shows Settings', (t) async {
+      final s = FakeService(
+        initial: {PermissionKind.camera: PermissionGrant.permanentlyDenied},
+      );
+      await open(t, s);
+      await t.tap(find.widgetWithText(FilledButton, 'Settings'));
+      await t.pumpAndSettle();
+      expect(s.settingsOpened, 1);
+      expect(s.requested, isEmpty);
+    });
+
+    testWidgets('off by default: the list is shown', (t) async {
+      await open(t, FakeService(), wizard: false);
+      expect(find.textContaining('Step 1 of'), findsNothing);
+      expect(find.text('Camera'), findsOneWidget);
+      expect(find.text('Microphone'), findsOneWidget);
+    });
+  });
 }

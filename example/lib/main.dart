@@ -79,6 +79,8 @@ class Gate extends StatelessWidget {
     ).push(MaterialPageRoute(builder: (_) => const Home()));
 
     return PermissionSetupPage(
+      explainBeforeAsk: false,
+      wizard: false,
       // Rebuild the bloc-owning page when the look changes.
       key: ValueKey(lookName),
       // No list: the page scans the app's manifest / Info.plist by itself.

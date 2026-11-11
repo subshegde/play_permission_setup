@@ -7,10 +7,12 @@ import '../bloc/permission_setup_bloc.dart';
 import '../models/permission_item.dart';
 import '../service/permission_detector.dart';
 import '../service/permission_service.dart';
+import 'permission_defaults.dart';
 import 'permission_setup_builder.dart';
 import 'permission_setup_hero.dart';
 import 'permission_setup_strings.dart';
 import 'permission_setup_style.dart';
+import 'permission_setup_wizard.dart';
 import 'permission_setup_view.dart';
 
 /// Ready-made, responsive permission setup screen.
@@ -39,6 +41,9 @@ class PermissionSetupPage extends StatelessWidget {
     this.allowSkip,
     this.autoCompleteWhenSatisfied = false,
     this.autoRequest = false,
+    this.wizard = false,
+    this.explainBeforeAsk = false,
+    this.explainBuilder,
     this.forcedLayout,
     this.appBar,
     this.brand,
@@ -80,6 +85,24 @@ class PermissionSetupPage extends StatelessWidget {
   /// Open the system permission dialogs one after another as soon as the page
   /// appears, instead of waiting for taps. Ones that need Settings are skipped.
   final bool autoRequest;
+
+  /// Before each system dialog, show a short "why we need this" message (the
+  /// item's `description`, or the default one) with *Continue* / *Not now*.
+  /// *Not now* skips that permission without counting as a refusal. Works
+  /// together with [autoRequest]. Off by default.
+  final bool explainBeforeAsk;
+
+  /// One permission per screen with *Next* / *Back* / *Skip*, instead of the
+  /// list. Uses [strings], [style] (accent colours), [allowSkip] (adds "Skip
+  /// setup"), [emptyBuilder] and [loadingBuilder]; the list-only options
+  /// (`itemBuilder`, `headerBuilder`, `footerBuilder`, `brand`, banners,
+  /// `forcedLayout`, `desktopStyle`) are ignored. Off by default.
+  final bool wizard;
+
+  /// Replace the default explanation dialog. Return `true` to go on and show
+  /// the system dialog, `false` to skip it. Only used with [explainBeforeAsk].
+  final Future<bool> Function(BuildContext context, PermissionItem item)?
+  explainBuilder;
   final PermissionSetupLayout? forcedLayout;
   final PreferredSizeWidget? appBar;
 
@@ -126,6 +149,42 @@ class PermissionSetupPage extends StatelessWidget {
     );
   }
 
+  Future<bool> _explain(BuildContext context, PermissionItem item) async {
+    final title = item.title ?? PermissionDefaults.title(item.kind);
+    final body = item.description ?? PermissionDefaults.description(item.kind);
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(item.icon ?? PermissionDefaults.icon(item.kind)),
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(body),
+            const SizedBox(height: 12),
+            Text(
+              strings.explainFootnote,
+              style: Theme.of(ctx).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(strings.explainSkip),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(strings.explainContinue),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+
   Widget _page(BuildContext context, List<PermissionItem> list) {
     return Scaffold(
       backgroundColor: PermissionSetupStyle.select(
@@ -142,25 +201,40 @@ class PermissionSetupPage extends StatelessWidget {
         onSkip: onSkip,
         autoCompleteWhenSatisfied: autoCompleteWhenSatisfied,
         autoRequest: autoRequest,
-        builder: (context, state, actions) => PermissionSetupView(
-          state: state,
-          actions: actions,
-          strings: strings,
-          style: style,
-          headerBuilder: headerBuilder,
-          itemBuilder: itemBuilder,
-          footerBuilder: footerBuilder,
-          emptyBuilder: emptyBuilder,
-          loadingBuilder: loadingBuilder,
-          showSkip: allowSkip ?? onSkip != null,
-          forcedLayout: forcedLayout,
-          brand: brand,
-          onToggleTheme: onToggleTheme,
-          illustration: illustration,
-          desktopStyle: desktopStyle,
-          topBanner: topBanner,
-          bottomBanner: bottomBanner,
-        ),
+        beforeAsk: explainBeforeAsk ? (explainBuilder ?? _explain) : null,
+        builder: (context, state, actions) => wizard
+            ? PermissionSetupWizard(
+                state: state,
+                actions: actions,
+                strings: strings,
+                style: PermissionSetupStyle.select(
+                  context,
+                  style,
+                  desktopStyle,
+                ).resolved(context),
+                showSkipAll: allowSkip ?? onSkip != null,
+                emptyBuilder: emptyBuilder,
+                loadingBuilder: loadingBuilder,
+              )
+            : PermissionSetupView(
+                state: state,
+                actions: actions,
+                strings: strings,
+                style: style,
+                headerBuilder: headerBuilder,
+                itemBuilder: itemBuilder,
+                footerBuilder: footerBuilder,
+                emptyBuilder: emptyBuilder,
+                loadingBuilder: loadingBuilder,
+                showSkip: allowSkip ?? onSkip != null,
+                forcedLayout: forcedLayout,
+                brand: brand,
+                onToggleTheme: onToggleTheme,
+                illustration: illustration,
+                desktopStyle: desktopStyle,
+                topBanner: topBanner,
+                bottomBanner: bottomBanner,
+              ),
       ),
     );
   }

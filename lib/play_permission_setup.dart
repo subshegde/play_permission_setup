@@ -31,5 +31,6 @@ export 'src/ui/permission_setup_page.dart';
 export 'src/ui/permission_setup_strings.dart';
 export 'src/ui/permission_setup_style.dart';
 export 'src/ui/permission_setup_view.dart';
+export 'src/ui/permission_setup_wizard.dart';
 export 'src/ui/permission_setup_workstation.dart';
 export 'src/ui/permission_tile.dart';

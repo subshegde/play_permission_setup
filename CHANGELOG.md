@@ -1,3 +1,21 @@
+## 0.3.0
+
+* **Step-by-step wizard.** Pass `wizard: true` to `PermissionSetupPage` for one permission per screen with *Next*,
+  *Back* and *Skip*, instead of the list. A progress bar and "Step 1 of 4" label show where the user is, a grant moves on
+  by itself, blocked permissions show *Settings*, and the last step's *Continue* needs every required permission
+  (*Review missing* jumps to the first one that is not granted). `allowSkip` / `onSkip` adds a "Skip setup" button.
+  Also available as the `PermissionSetupWizard` widget for custom UIs. Works with `autoRequest` and `explainBeforeAsk`.
+  Off by default. New strings: `wizardNext`, `wizardBack`, `wizardSkipAll`, `wizardReview`, `wizardStepLabel`,
+  `wizardIncomplete`.
+* **Explain before ask.** Pass `explainBeforeAsk: true` to `PermissionSetupPage` and a short "why we need this" dialog
+  (the item's `description`, or the default one) appears before each system dialog, with *Continue* and *Not now*.
+  *Not now* skips that permission without counting as a refusal, so the system prompt isn't wasted. Works with
+  `autoRequest`. Off by default, so existing apps are unchanged.
+  * `explainBuilder:` replaces the default dialog with your own (return `true` to go on, `false` to skip).
+  * `PermissionSetupBuilder(beforeAsk: ...)` and `PermissionSetupBloc(beforeAsk: ...)` give the same hook for custom UIs.
+  * New strings: `explainContinue`, `explainSkip`, `explainFootnote`.
+  * Note: with your own `bloc:` on the page, set `beforeAsk` on that bloc yourself.
+
 ## 0.2.1
 
 * `autoRequest: true` (on `PermissionSetupPage`, `PermissionSetupBuilder` and `PermissionSetupBloc`): the system

@@ -54,6 +54,15 @@ class PermissionSetupStrings {
     this.hintAllow = 'Allow',
     this.hintContinue = 'Continue',
     this.restrictedChip = 'Device policy restricted',
+    this.explainContinue = 'Continue',
+    this.explainSkip = 'Not now',
+    this.explainFootnote = 'Next, your device will ask you to confirm.',
+    this.wizardNext = 'Next',
+    this.wizardBack = 'Back',
+    this.wizardSkipAll = 'Skip setup',
+    this.wizardReview = 'Review missing',
+    this.wizardStepLabel = 'Step {current} of {total}',
+    this.wizardIncomplete = 'Some required permissions are still missing.',
   });
 
   final String title;
@@ -136,6 +145,20 @@ class PermissionSetupStrings {
 
   /// Pill shown on a row that the device policy blocks.
   final String restrictedChip;
+
+  /// Explain-before-ask dialog (`explainBeforeAsk: true`).
+  final String explainContinue;
+  final String explainSkip;
+  final String explainFootnote;
+
+  /// Step-by-step mode (`wizard: true`). [wizardStepLabel] may contain
+  /// `{current}` and `{total}`.
+  final String wizardNext;
+  final String wizardBack;
+  final String wizardSkipAll;
+  final String wizardReview;
+  final String wizardStepLabel;
+  final String wizardIncomplete;
 
   String progress(int granted, int total) => '$granted of $total allowed';
   String requiredCount(int n) => '$n REQUIRED';

@@ -9,6 +9,7 @@ PermissionSetupBloc make(
   PermissionPlatform platform = PermissionPlatform.android,
   bool autoComplete = false,
   bool autoRequest = false,
+  Future<bool> Function(PermissionItem)? beforeAsk,
 }) => PermissionSetupBloc(
   items: items,
   service: s,
@@ -16,6 +17,7 @@ PermissionSetupBloc make(
   autoRefreshOnResume: false,
   autoCompleteWhenSatisfied: autoComplete,
   autoRequest: autoRequest,
+  beforeAsk: beforeAsk,
 );
 
 Future<PermissionSetupBloc> ready(PermissionSetupBloc b) async {
@@ -253,6 +255,41 @@ void main() {
     final b = make(s, [cam]);
     await ready(b);
     expect(s.requested, isEmpty);
+    await b.close();
+  });
+
+  test('beforeAsk: declining skips the request and is not a refusal', () async {
+    final s = FakeService();
+    final asked = <PermissionKind>[];
+    final b = make(
+      s,
+      [cam, mic],
+      autoRequest: true,
+      beforeAsk: (i) async {
+        asked.add(i.kind);
+        return i.kind == PermissionKind.microphone; // say no to camera
+      },
+    );
+    await b.stream.firstWhere(
+      (x) => s.requested.isNotEmpty && x.status == PermissionSetupStatus.ready,
+    );
+    expect(asked, [PermissionKind.camera, PermissionKind.microphone]);
+    expect(s.requested, [PermissionKind.microphone]);
+    final camEntry = b.state.entryOf(PermissionKind.camera)!;
+    expect(camEntry.attempts, 0);
+    expect(camEntry.isRequesting, isFalse);
+    await b.close();
+  });
+
+  test('without beforeAsk the request goes straight out', () async {
+    final s = FakeService();
+    final b = make(s, [cam]);
+    await ready(b);
+    b.add(const PermissionRequested(PermissionKind.camera));
+    await b.stream.firstWhere(
+      (x) => s.requested.isNotEmpty && x.status == PermissionSetupStatus.ready,
+    );
+    expect(s.requested, [PermissionKind.camera]);
     await b.close();
   });
 

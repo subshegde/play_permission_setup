@@ -31,6 +31,7 @@ class PermissionSetupBuilder extends StatelessWidget {
     this.onSkip,
     this.autoCompleteWhenSatisfied = false,
     this.autoRequest = false,
+    this.beforeAsk,
     required this.builder,
   });
 
@@ -45,6 +46,11 @@ class PermissionSetupBuilder extends StatelessWidget {
 
   /// See [PermissionSetupBloc.autoRequest].
   final bool autoRequest;
+
+  /// Explain-before-ask hook, see [PermissionSetupBloc.beforeAsk]. Gets a
+  /// context so you can show a dialog or sheet.
+  final Future<bool> Function(BuildContext context, PermissionItem item)?
+  beforeAsk;
   final Widget Function(
     BuildContext context,
     PermissionSetupState state,
@@ -86,13 +92,17 @@ class PermissionSetupBuilder extends StatelessWidget {
           service,
           autoCompleteWhenSatisfied,
           autoRequest,
+          beforeAsk != null,
         ),
       ),
-      create: (_) => PermissionSetupBloc(
+      create: (ctx) => PermissionSetupBloc(
         items: items,
         service: service,
         autoCompleteWhenSatisfied: autoCompleteWhenSatisfied,
         autoRequest: autoRequest,
+        beforeAsk: beforeAsk == null
+            ? null
+            : (item) async => ctx.mounted ? beforeAsk!(ctx, item) : false,
       ),
       child: child,
     );

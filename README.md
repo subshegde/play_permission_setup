@@ -128,7 +128,7 @@ or add it to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  play_permission_setup: ^0.2.1
+  play_permission_setup: ^0.3.0
 ```
 
 ### 2. Declare the permissions the normal way
@@ -160,6 +160,8 @@ class Gate extends StatelessWidget {
       onSkip: goHome,                      // shows "Skip"
       autoCompleteWhenSatisfied: true,     // never show the page if nothing is left to ask
       autoRequest: true,                   // open the system dialogs one after another, no tap needed
+      explainBeforeAsk: true,              // show a "why we need this" message before each system dialog
+      wizard: true,                        // one permission per screen (Next / Back / Skip) instead of the list
     );
   }
 }
