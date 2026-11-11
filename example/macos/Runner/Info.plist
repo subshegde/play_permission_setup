@@ -34,5 +34,13 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pick photos to share.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Find friends in your contacts.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Add events to your calendar.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Connect to nearby devices.</string>
 </dict>
 </plist>

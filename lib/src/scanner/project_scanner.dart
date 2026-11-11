@@ -53,10 +53,18 @@ class ProjectScanner {
     _crossCheck(declared, issues, scanned, android, iosKeys, macKeys);
 
     if (scanned.isEmpty) {
+      final example = Directory('$root/example');
+      final isPlugin = File('$root/pubspec.yaml').existsSync() &&
+          File('$root/pubspec.yaml').readAsStringSync().contains('pluginClass');
+      final hint = isPlugin && example.existsSync()
+          ? ' This folder is a plugin/package, not an app: its android/ and ios/ '
+              'folders hold native plugin code, not a manifest or Info.plist. '
+              'Scan an app instead, e.g. --path example.'
+          : ' Run from your Flutter app folder or pass --path.';
       issues.add(
         ScanIssue(
           IssueSeverity.error,
-          'No android/, ios/ or macos/ project files found in $root. Run from your Flutter app folder or pass --path.',
+          'No android/, ios/ or macos/ project files found in $root.$hint',
         ),
       );
     }

@@ -128,7 +128,7 @@ or add it to `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  play_permission_setup: ^0.1.0
+  play_permission_setup: ^0.2.0
 ```
 
 ### 2. Declare the permissions the normal way

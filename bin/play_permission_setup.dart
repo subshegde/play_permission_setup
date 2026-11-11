@@ -23,7 +23,11 @@ Future<void> main(List<String> args) async {
       help:
           'Flutter app root (default: nearest parent folder that is a Flutter app)',
     )
-    ..addOption('output', abbr: 'o', defaultsTo: 'lib/play_permission_setup.g.dart')
+    ..addOption(
+      'output',
+      abbr: 'o',
+      defaultsTo: 'lib/play_permission_setup.g.dart',
+    )
     ..addOption(
       'required',
       help: 'Comma list of kinds that block "Continue", e.g. camera,location',
@@ -68,7 +72,25 @@ Future<void> main(List<String> args) async {
     return out;
   }
 
-  final root = _resolveRoot(r['path'] as String?);
+  var root = _resolveRoot(r['path'] as String?);
+  if (r['path'] == null) {
+    // A plugin's own android/ and ios/ hold native code, not an app manifest.
+    // If it ships an example app, scan that instead.
+    final example = p.join(root, 'example');
+    final pubspec = File(p.join(root, 'pubspec.yaml'));
+    final isPlugin =
+        pubspec.existsSync() &&
+        pubspec.readAsStringSync().contains('pluginClass');
+    if (isPlugin &&
+        ProjectScanner(root).scan().scanned.isEmpty &&
+        Directory(example).existsSync() &&
+        ProjectScanner(example).scan().scanned.isNotEmpty) {
+      stdout.writeln(
+        '$root is a plugin, not an app – scanning its example app.',
+      );
+      root = example;
+    }
+  }
   stdout.writeln('Project: $root');
   final result = ProjectScanner(root).scan();
   _printReport(result);
@@ -121,6 +143,12 @@ void _printReport(ScanResult r) {
       stdout.writeln(
         '${k.name.padRight(w)}  ${cols.map((c) {
           if (!k.platforms.contains(c)) return '-'.padRight(7);
+          // iOS/macOS kinds without a plist key (e.g. notifications) are
+          // enabled through the Podfile macro, so there is nothing to miss.
+          final appleNoKey = (c == PermissionPlatform.ios ||
+                  c == PermissionPlatform.macos) &&
+              k.descriptor.iosKeys.isEmpty;
+          if (appleNoKey && !d.contains(c)) return 'podfile'.padRight(7);
           return (d.contains(c) ? 'yes' : 'MISSING').padRight(7);
         }).join(' ')}',
       );

@@ -1,4 +1,4 @@
-## Unreleased
+## 0.2.0
 
 * **Automatic scanning.** `PermissionSetupPage()` without `items:` reads the permissions the installed app declares
   (merged Android manifest, iOS `Info.plist`) and shows exactly those. Configure with `PermissionDetection`
@@ -11,6 +11,9 @@
 * `PermissionSetupStyle.crimson` and `PermissionSetupStyle.clinical` presets, each tweakable with `copyWith`; a `dark:` style is used under a dark theme.
 * Many new style tokens (colours, gradient, radii, shadows, fonts) and strings; new `brand`, `onToggleTheme` and `illustration` options.
 * The default look is unchanged.
+* Scanner CLI: run from a plugin folder, it now scans the bundled `example/` app instead of failing, and the error
+  explains why a plugin has nothing to scan. Permissions enabled only through the Podfile (e.g. notifications on
+  iOS/macOS) show `podfile` instead of `MISSING`.
 
 ## 0.1.0
 

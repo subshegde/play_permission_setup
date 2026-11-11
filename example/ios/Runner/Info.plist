@@ -17,7 +17,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Connect to your accessories.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string></string>
+	<string>Add events to your calendar.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

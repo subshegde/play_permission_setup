@@ -1,6 +1,6 @@
 name: play_permission_setup
 description: "Responsive, customisable BLoC permission setup page for mobile, tablet and desktop, plus a CLI that audits your manifest and Info.plist."
-version: 0.1.0
+version: 0.2.0
 repository: https://github.com/subshegde/play_permission_setup
 issue_tracker: https://github.com/subshegde/play_permission_setup/issues
 topics:
