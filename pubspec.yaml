@@ -1,0 +1,65 @@
+name: play_permission_setup
+description: "Responsive, customisable BLoC permission setup page for mobile, tablet and desktop, plus a CLI that audits your manifest and Info.plist."
+version: 0.1.0
+repository: https://github.com/subshegde/play_permission_setup
+issue_tracker: https://github.com/subshegde/play_permission_setup/issues
+topics:
+  - permissions
+  - bloc
+  - onboarding
+  - responsive
+  - cli
+screenshots:
+  - description: "Crimson look on a phone: hero, progress card and one card per permission."
+    path: screenshots/crimson_phone.png
+  - description: "Crimson look in dark mode."
+    path: screenshots/crimson_phone_dark.png
+  - description: "Crimson look on a tablet: same layout as desktop."
+    path: screenshots/crimson_tablet.png
+  - description: "Crimson look on desktop: hero on the left, permissions on the right."
+    path: screenshots/crimson_desktop.png
+  - description: "Clinical look on a phone: deep navy with teal gradient actions."
+    path: screenshots/clinical_phone.png
+  - description: "Clinical look on desktop."
+    path: screenshots/clinical_desktop.png
+  - description: "Workstation look on a desktop: top bar, left panel and panel rows."
+    path: screenshots/workstation_1280.png
+  - description: "Classic compact list on a phone."
+    path: screenshots/phone.png
+executables:
+  play_permission_setup:
+
+environment:
+  sdk: ^3.8.0
+  flutter: ">=3.32.0"
+
+dependencies:
+  args: ^2.7.0
+  bloc: ^9.2.1
+  bloc_concurrency: ^0.3.0
+  device_info_plus: ^13.3.0
+  equatable: ^3.0.0
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  path: ^1.9.1
+  permission_handler: ^12.0.1
+  xml: ^7.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  bloc_test: ^10.0.0
+  mocktail: ^1.0.5
+
+flutter:
+  # Native part: reports what the installed app declares (merged
+  # AndroidManifest.xml, iOS Info.plist) so the page can scan itself.
+  plugin:
+    platforms:
+      android:
+        package: com.permissionsetup
+        pluginClass: PermissionSetupPlugin
+      ios:
+        pluginClass: PermissionSetupPlugin
